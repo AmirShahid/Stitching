@@ -1,8 +1,7 @@
 {
 "vertical_deviation": 2,
 "number_of_threads": 4,
-"data_dir": "E:\\lamel_stitching",
-"dataset_name": "whole_lamel_data_5",
+"data_dir": "E:\\lamel_stitching\\whole_lamel_data_5\\",
 "path_delim": "\\",
 "image_extension": "jpeg",
 "pref": "img_",
@@ -23,5 +22,12 @@
 "max_shift_r_threshold_lr": 308,
 "grey_std_thresh_ST": 11,
 "grey_std_thresh_BC": 5,
-"area_threshold": 0.0001
+"area_threshold": 0.0001,
+"zoom_levels": 6,
+"tile_size": 256,
+"nogui": true,
+"load_from_disk": false,
+"load_shift_arrays": true,
+"store_locally": false,
+"show_log": false
 }

@@ -91,7 +91,7 @@ static int instance_count = 0;
 class Stitch
 {
 public:
-	Stitch(int row_count = 0, int column_count = 0, int zoom_levels = 0);
+	Stitch(int row_count = 0, int column_count = 0);
 
     struct best_column
 	{
@@ -114,30 +114,37 @@ public:
 			shift_c = c;
         }
 	};
-	
-	//std::vector<std::vector<shift>> calculate_stitch_shifts_lr_in_row();
+	/// Calculate horizontal shifts multi threaded in rows
+	std::vector<std::vector<shift>> calculate_stitch_shifts_lr_in_row();
 	std::vector<shift>& calculate_stitch_shifts_ud();
-	//std::vector<std::vector<shift>> calculate_stitch_shifts_lr_in_column();
-	//void stitch_single_thread_lr(int start_row, int end_row, int start_col, int end_col);
-	std::vector<shift>& calculate_stitch_shifts_lr(int row_number = 0);
-	void Stitch_all();
-	std::vector<std::vector<shift>> stitch_shifts_lr;
-	std::vector<shift> stitch_shifts_row;
-	std::vector<shift> stitch_shifts_ud;
+	/// Calculate horizontal shifts multi threaded in columns
+    std::vector<std::vector<shift>> calculate_stitch_shifts_lr_in_column();
+	/// Calculate horizontal shifts for specific row multi threaded in rows
+    std::vector<shift>& calculate_stitch_shifts_lr(int row_number = 0);
+    /// only should be called when horizontal shifts has been calculated 
+    void Stitch_all();
+	const int row_count, column_count;
+	std::vector<FullLamelImage> full_lamel_images;
 	std::vector<std::vector<double>> stitch_shifts_lr_row;
 	std::vector<std::vector<double>> stitch_shifts_lr_col;
-	std::vector<double> stitch_shifts_ud_row;
-	std::vector<double> stitch_shifts_ud_col;
-	std::vector<best_column>best_column_for_ud;
 	std::vector<int>most_informative_column;
-	//std::vector<std::vector<std::vector<ImageFile>>>stitched_images;
-	std::vector<std::vector<int>> start_tile_r;
-	std::vector<std::vector<int>> start_tile_c;
-	best_column best_column_row;
-	std::vector<int> shift_idx;
 	ImageFile* row_images;
 	LamelImages* lamel_images;
-	std::vector<FullLamelImage> full_lamel_images;
+	best_column best_column_row;
+	int zoom_levels;
+	std::vector<std::vector<shift>> stitch_shifts_lr;
+	bool load_from_disk = false;
+
+    private:
+	std::vector<shift> stitch_shifts_row;
+	std::vector<shift> stitch_shifts_ud;
+	//std::vector<double> stitch_shifts_ud_row;
+	//std::vector<double> stitch_shifts_ud_col;
+	std::vector<best_column>best_column_for_ud;
+	std::vector<std::vector<int>> start_tile_r;
+	std::vector<std::vector<int>> start_tile_c;
+	std::vector<int> shift_idx;
+
     struct blank_property
     {
 		bool is_blank;
@@ -157,14 +164,17 @@ public:
 	int number_of_threads = 4;
 	int sample_width = 2448;
 	int sample_height = 2048;
-	int zoom_levels, tile_size = 256;
-	const int row_count, column_count;
-	// init Parameters
-    std::string data_dir = "E:\\lamel_stitching";
-    std::string dataset_name = "whole_lamel_data_5";
-	std::string path_delim = "\\";
+	int tile_size = 256;
+
+    // init Parameters
+    std::string data_dir = "E:\\lamel_stitching\\whole_lamel_data_5\\";
 	std::string image_ext = "jpeg";
 	std::string pref = "img_";
+	bool nogui = true;
+	bool load_shift_arrays = false;
+	bool store_locally = false;
+	bool show_log = false;
+
 	// Stitching Parameters
 	int split_ratio_lr = 6;
 	int split_ratio_ud = 6;

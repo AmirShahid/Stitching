@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-    using System.Text;
+using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.IO;
-using CshTestStandard;
 
 namespace CsharpTest
 {
@@ -33,8 +32,8 @@ namespace CsharpTest
     [StructLayout(LayoutKind.Sequential)]
     struct FullLamelLevels
     {
-	public IntPtr lamel_images;
-	public int zoom_level_count;
+        public IntPtr lamel_images;
+        public int zoom_level_count;
     };
 
 
@@ -62,8 +61,8 @@ namespace CsharpTest
     }
     struct FullLamelImage
     {
-	public IntPtr image_file;
-	int x, y, z;
+        public IntPtr image_file;
+        int x, y, z;
     };
 
 
@@ -76,23 +75,23 @@ namespace CsharpTest
         public static extern FullLamelImages stitch_all(LamelImages images, int[] best_column, ShiftArray shift_r, ShiftArray shift_c);
         static void Main(string[] args)
         {
-            int column_count = 87;
-            int row_count = 60;
+            int column_count = 20;
+            int row_count = 20;
             int[] best_column_for_ud = new int[row_count];
-            double[][] shifts_r = new double[row_count][];            
+            double[][] shifts_r = new double[row_count][];
             double[][] shifts_c = new double[row_count][];
             ImageRow[] imageRows = new ImageRow[row_count];
             ShiftArrayRow[] shiftRArrayRows = new ShiftArrayRow[row_count];
             ShiftArrayRow[] shiftCArrayRows = new ShiftArrayRow[row_count];
             for (int i = 0; i < row_count; i++)
             {
-                
+
                 byte[][] FilesArray = new byte[column_count][];
                 for (int j = 0; j < column_count; j++)
                 {
-                    FilesArray[j] = System.IO.File.ReadAllBytes(@"E:\lamel_stitching\whole_lamel_data_5\img_"+i.ToString()+"_" + j.ToString() + ".jpeg");
+                    /// Loading dataset to RAM
+                    FilesArray[j] = System.IO.File.ReadAllBytes(@"E:\lamel_stitching\whole_lamel_data_5\img_" + i.ToString() + "_" + j.ToString() + ".jpeg");
                 }
-
                 GCHandle[] Handles = new GCHandle[column_count];
                 ImageFile[] imageFiles = new ImageFile[column_count];
                 for (int j = 0; j < column_count; j++)
@@ -113,12 +112,12 @@ namespace CsharpTest
                 };
                 shifts_r[i] = new double[column_count];
                 shifts_c[i] = new double[column_count];
-                //best_column_for_ud[i] = get_lr_shifts(imageRows[i], shifts_r[i], shifts_c[i]);
+                best_column_for_ud[i] = get_lr_shifts(imageRows[i], shifts_r[i], shifts_c[i]);
                 GCHandle handle = GCHandle.Alloc(shifts_r[i], GCHandleType.Pinned);
                 shiftRArrayRows[i] = new ShiftArrayRow()
                 {
                     columns = handle.AddrOfPinnedObject(),
-                    column_count =  shifts_r[i].Length
+                    column_count = shifts_r[i].Length
                 };
                 handle = GCHandle.Alloc(shifts_c[i], GCHandleType.Pinned);
                 shiftCArrayRows[i] = new ShiftArrayRow()
@@ -151,8 +150,9 @@ namespace CsharpTest
                 rows = CHandle.AddrOfPinnedObject(),
                 row_count = shiftCArrayRows.Length
             };
-            var result = stitch_all(lamelImages,best_column_for_ud,shift_r,shift_c);
+
             Console.ReadKey();
+            var result = stitch_all(lamelImages, best_column_for_ud, shift_r, shift_c);
         }
     }
 }
