@@ -20,7 +20,7 @@ Overlapping Image Samples:
 We've made our own datasets from our Basler camera.
 
 Examples:
-![first](images/img_8_22.jpeg =153x128)
+![first](images/img_8_22.jpeg | width=153)
 
 
 ## Questions
