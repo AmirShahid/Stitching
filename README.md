@@ -4,7 +4,7 @@ Multi-threaded C++ implementation for Image Stitching.
 
 ## Introduction
 
-In the Automated Medical Image Scanning, we have a significant issue with the camera position through the path on the slide, thus the captured images is so likely to have overlapping fields with horizental and vertical adjacent images. My friends and I has developed a program in C++(due to its speed) which exports a DLL to be used in any project(I write a example for C#).
+In the Automated Medical Image Scanning, we have a significant issue with the moving camera position on the slide, thus the captured images is so likely to have overlapping fields with horizental and vertical adjacent images. We have developed a program in C++(due to its speed) which exports a DLL to be used in any project(example for C# is under Stitching_CSHARP) to concat images regarding to the Matching Common Templates among adjacent images.
 
 #### *Overlapping image samples before stitching*:
 
@@ -28,7 +28,7 @@ In the Automated Medical Image Scanning, we have a significant issue with the ca
 <img  src="https://github.com/AmirShahid/Stitching/blob/master/images/stitch_output.jpg" width="776" height="770"/>
 
 
-for more guidance you can see program.cs in Stitching_CSHARP.
+for more guidance you can see program.cs under Stitching_CSHARP.
 ## Requirements
 
 * [OpenCV](https://github.com/opencv/opencv) 3.4.3
