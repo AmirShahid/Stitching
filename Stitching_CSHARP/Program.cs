@@ -150,9 +150,10 @@ namespace CsharpTest
                 rows = CHandle.AddrOfPinnedObject(),
                 row_count = shiftCArrayRows.Length
             };
-
+            Console.WriteLine("Horizental shifts are calculated! \n \n" +
+                "Now Calculating whole lamel output ...");
             Console.ReadKey();
-            var result = stitch_all(lamelImages, best_column_for_ud, shift_r, shift_c);
+            var fullLamelImages = stitch_all(lamelImages, best_column_for_ud, shift_r, shift_c);
         }
     }
 }

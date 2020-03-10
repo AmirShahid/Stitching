@@ -114,16 +114,23 @@ public:
 			shift_c = c;
         }
 	};
-	/// Calculate horizontal shifts multi threaded in rows
-	std::vector<std::vector<shift>> calculate_stitch_shifts_lr_in_row();
-	std::vector<shift>& calculate_stitch_shifts_ud();
-	/// Calculate horizontal shifts multi threaded in columns
+	/* @brief Calculate horizontal shifts multi threaded in rows
+       @return 2d shifts vector
+    */
+    std::vector<std::vector<shift>> calculate_stitch_shifts_lr_in_row();
+
+    std::vector<shift>& calculate_stitch_shifts_ud();
+
+    /// Calculate horizontal shifts multi threaded in columns
     std::vector<std::vector<shift>> calculate_stitch_shifts_lr_in_column();
-	/// Calculate horizontal shifts for specific row multi threaded in rows
+
+    /// Calculate horizontal shifts for specific row multi threaded in rows
     std::vector<shift>& calculate_stitch_shifts_lr(int row_number = 0);
-    /// only should be called when horizontal shifts has been calculated 
+
+    /// only should be called when horizontal shifts has been calculated
     void Stitch_all();
-	const int row_count, column_count;
+
+    const int row_count, column_count;
 	std::vector<FullLamelImage> full_lamel_images;
 	std::vector<std::vector<double>> stitch_shifts_lr_row;
 	std::vector<std::vector<double>> stitch_shifts_lr_col;
