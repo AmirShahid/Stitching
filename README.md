@@ -9,8 +9,18 @@ In the Automated Medical Image Scanning, we have a significant issue with the ca
 Overlapping Image Samples:
 
 Row 7 - Columns 21 : 32:
-<img src="https://camo.githubusercontent.com/..." data-canonical-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="200" height="400" />
-<img src="https://camo.githubusercontent.com/..." data-canonical-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="200" height="400" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_21.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_22.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_23.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_24.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_25.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_26.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_27.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_28.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_29.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_30.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_31.jpeg"" width="153" height="128" />
+<img src=""https://github.com/AmirShahid/Stitching/blob/master/images/img_7_32.jpeg"" width="153" height="128" />
 
 ## Requirements
 
