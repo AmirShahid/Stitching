@@ -8,7 +8,9 @@ In the Automated Medical Image Scanning, we have a significant issue with the ca
 
 Overlapping Image Samples:
 
-
+Row 7 - Columns 21 : 32:
+<img src="https://camo.githubusercontent.com/..." data-canonical-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="200" height="400" />
+<img src="https://camo.githubusercontent.com/..." data-canonical-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="200" height="400" />
 
 ## Requirements
 
@@ -18,10 +20,6 @@ Overlapping Image Samples:
 ## Data 
 
 We've made our own datasets from our Basler camera.
-
-Examples:
-![first](images/img_8_22.jpeg | width=153)
-
 
 ## Questions
 Please add an issue if you have any questions
