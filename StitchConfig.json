@@ -27,7 +27,7 @@
 "tile_size": 256,
 "nogui": true,
 "load_from_disk": true,
-"load_shift_arrays": true,
-"store_locally": true,
+"load_shift_arrays": flase,
+"store_locally": false,
 "show_log": false
 }

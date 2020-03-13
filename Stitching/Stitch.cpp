@@ -25,8 +25,6 @@ Stitch::Stitch(int row_count, int column_count):
 	stitch_shifts_lr_row(row_count, vector<double>(column_count, double())),
 	stitch_shifts_lr_col(row_count, vector<double>(column_count, double())),
 	stitch_shifts_ud(row_count, shift()),
-	//stitch_shifts_ud_row(row_count),
-	//stitch_shifts_ud_col(row_count),
 	stitch_shifts_row(column_count),
 	best_column_for_ud(row_count, best_column()),
 	most_informative_column(row_count),
@@ -251,18 +249,21 @@ Stitch::shift Stitch::stitch_lr(Mat& image_left, Mat& image_right) {
 	cvtColor(image_right, image_right_gray, CV_BGR2GRAY);
 	int effective_x = (int)(image_left_gray.cols * lu_image_portion);
 	image_left_gray(Rect(effective_x, 0, (int)(image_left_gray.cols - effective_x), image_left_gray.rows)).copyTo(image_left_gray_cropped);
-	// init list and parameters
+
+    // init list and parameters
 	vector<double> shift_direction_r;
 	vector<double> shift_direction_c;
 	int temp_r = (int)(image_right_gray.rows / split_ratio_lr);
 	int temp_c = (int)(image_right_gray.cols / split_ratio_lr);
-	// Check Blankness
+	
 	if (show_log)
 	{
 		cout << "block_stitch_init_time: " << clock() - ttt << endl;
 		ttt = clock();
 	}
-	blank_property blank_stat = is_image_blank(image_right(Rect(0, 0, temp_c, image_right.rows)),grey_std_thresh_ST);
+
+	// Check Blankness
+    blank_property blank_stat = is_image_blank(image_right(Rect(0, 0, temp_c, image_right.rows)),grey_std_thresh_ST);
 	
     if (blank_stat.is_blank)
 	{
@@ -341,14 +342,14 @@ void Stitch::stitch_single_thread_ud(int start_row, int end_row)
         if (load_from_disk)
 	        image_up = imread(data_dir + pref + to_string(i) + "_" + to_string(most_informative_column[i]) + "." + image_ext, IMREAD_UNCHANGED);
 		else
-	        image_up = imdecode(Mat(1, lamel_images->rows[i].columns[most_informative_column[i]].length, CV_8UC1, lamel_images->rows[i].columns[most_informative_column[i]].data), CV_LOAD_IMAGE_UNCHANGED);
+	        image_up = imdecode(Mat(1, lamel_images->rows[i].columns[most_informative_column[i]].length_, CV_8UC1, &lamel_images->rows[i].columns[most_informative_column[i]].data_[0]), CV_LOAD_IMAGE_UNCHANGED);
 	    for (auto H_shift : shift_idx)
 		{
 			if (load_from_disk)
 			    image_down = imread(data_dir + pref + to_string(i + 1) + "_" +
 				    to_string(most_informative_column[i] + H_shift) + "." + image_ext, IMREAD_UNCHANGED);
 			else 
-	            image_down = imdecode(Mat(1, lamel_images->rows[i+1].columns[most_informative_column[i]].length, CV_8UC1, lamel_images->rows[i + 1].columns[most_informative_column[i]].data), CV_LOAD_IMAGE_UNCHANGED);
+	            image_down = imdecode(Mat(1, lamel_images->rows[i+1].columns[most_informative_column[i]].length_, CV_8UC1, &lamel_images->rows[i + 1].columns[most_informative_column[i]].data_[0]), CV_LOAD_IMAGE_UNCHANGED);
 	        shift stitch_result = stitch_ud(image_up, image_down);
 
 			temp_shift_r[H_shift + vertical_deviation] = stitch_result.shift_r;
@@ -382,8 +383,6 @@ void Stitch::stitch_single_thread_ud(int start_row, int end_row)
         const double median_r = calc_median(temp_shift_r);
         const double median_c = calc_median(temp_shift_c);
 		stitch_shifts_ud[i] = shift(median_r, median_c);
-	    //stitch_shifts_ud_row[i] = median_r;
-	    //stitch_shifts_ud_col[i] = median_c;
 	}
 }
 
@@ -402,20 +401,21 @@ void Stitch::stitch_single_thread_lr(int start_row, int end_row, int start_col, 
                 if (load_from_disk)
                     image_left = imread(data_dir + pref + to_string(i) + "_" + to_string(j) + "." + image_ext);
     		    else
-			        image_left = imdecode(Mat(1, row_images[j].length, CV_8UC1, row_images[j].data), CV_LOAD_IMAGE_UNCHANGED);
+			        image_left = imdecode(Mat(1, row_images[j].length_, CV_8UC1, &row_images[j].data_[0]), CV_LOAD_IMAGE_UNCHANGED);
             }
 		    if (load_from_disk)
 		        image_right = imread(data_dir + pref + to_string(i) + "_" + to_string(j + 1) + "." + image_ext);
 		    else
-                image_right = imdecode(Mat(1, row_images[j+1].length, CV_8UC1, row_images[j+1].data), CV_LOAD_IMAGE_UNCHANGED);
-            //stitch_shifts_lr[i][j] = stitch_lr(image_left, image_right);
+                image_right = imdecode(Mat(1, row_images[j+1].length_, CV_8UC1, &row_images[j+1].data_[0]), CV_LOAD_IMAGE_UNCHANGED);
             stitch_shifts_row[j] = stitch_lr(image_left, image_right);
+
             blank_stat = is_image_blank(image_left(Rect(0, (int)(lu_image_portion * image_left.rows), image_left.cols, image_left.rows - (int)(lu_image_portion * image_left.rows))),grey_std_thresh_BC);
-		    //if (best_column_for_ud[start_row].color_ratio < blank_stat.color_ratio)
-			    //best_column_for_ud[start_row] = best_column(j, blank_stat.color_ratio);
-		    if (best_column_row.color_ratio < blank_stat.color_ratio)
+
+            if (best_column_row.color_ratio < blank_stat.color_ratio)
 			    best_column_row = best_column(j, blank_stat.color_ratio);
-            cout << instance_count << " , " << j << " color_ratio: " << blank_stat.color_ratio << endl;
+
+            if (show_log)
+                cout << instance_count << " , " << j << " color_ratio: " << blank_stat.color_ratio << endl;
 	    }
     }
 }
@@ -464,13 +464,14 @@ vector<Stitch::shift>& Stitch::calculate_stitch_shifts_lr(int row_number)
 	{
 		lr_threads.push_back(async(launch::async, &Stitch::stitch_single_thread_lr ,this, row_number, row_number, j, min((j + offset + 1), column_count-1)));
 	}
+
 	for (auto &thread : lr_threads)
 	{
 		thread.wait();
 	}
  	lr_threads.clear();
-	//shift_cleaner(stitch_shifts_lr[row_number]);
 	shift_cleaner(stitch_shifts_row);
+    
     if (store_locally){
 		cout << "saving shift arrays" << endl;
         pt::ptree json_arr;
@@ -506,10 +507,8 @@ vector<Stitch::shift>& Stitch::calculate_stitch_shifts_ud()
              {
 			     stitch_shifts_lr_row[i][j] = lrS.get<double>(to_string(i) + "." + to_string(j) + "." + "shift_r");
 			     stitch_shifts_lr_col[i][j] = lrS.get<double>(to_string(i) + "." + to_string(j) + "." + "shift_c");
-			     //stitch_shifts_lr[i][j] = shift(lrS.get<double>(to_string(i)+"."+to_string(j) + "." + "shift_r"), lrS.get<double>(to_string(i)+"."+to_string(j) + "." + "shift_c"));
              }
 		     most_informative_column[i] = lrS.get<int>("most_informative_column.column");
-		     //best_column_for_ud[i] = best_column(lrS.get<int>("most_informative_column.column") ,lrS.get<double>("most_informative_column.color_ratio"));
         }
 	}
 	vector<future<void>> ud_threads;
@@ -569,12 +568,11 @@ void Stitch::Stitch_all()
 		    }
 		    stitch_shifts_ud[i].shift_r = udS.get<double>(to_string(i) + ".shift_r");
 		    stitch_shifts_ud[i].shift_c = udS.get<double>(to_string(i) + ".shift_c");
-		    //best_column_for_ud[i] = best_column(lrS.get<int>("most_informative_column.column"), lrS.get<double>("most_informative_column.color_ratio"));
 		    most_informative_column[i] = lrS.get<int>("most_informative_column.column");
 	    }
 	}
 
-	int start_row = 0, end_row = row_count-1, start_col = 2, end_col = column_count-3;
+	int start_row = 0, end_row = row_count-1, start_col = 2, end_col = column_count-1;
 		int min_r = 0, max_r = 0, min_c = 0, max_c = 0;
 	enum tile_config { START_ROW, END_ROW, START_COL, END_COL, LEFT_MARGIN, TOP_MARGIN };
 
@@ -603,7 +601,6 @@ void Stitch::Stitch_all()
 
 		for (int cc = most_informative_column[rr - 1] + 1; cc <= end_col; cc++)
 		{
-
 			start_tile_r[rr][cc] = start_tile_r[rr][most_informative_column[rr - 1]];
 			start_tile_c[rr][cc] = start_tile_c[rr][most_informative_column[rr - 1]];
 			for (int k = most_informative_column[rr - 1]; k<cc; k++)
@@ -617,7 +614,6 @@ void Stitch::Stitch_all()
 
 		for (int cc = most_informative_column[rr - 1] - 1; cc >= start_col; cc--)
 		{
-			cout << rr << " " << cc << endl;
 			start_tile_r[rr][cc] = start_tile_r[rr][most_informative_column[rr - 1]];
 			start_tile_c[rr][cc] = start_tile_c[rr][most_informative_column[rr - 1]];
 			for (int k = most_informative_column[rr - 1] - 1; k >= cc; k--)
@@ -646,7 +642,8 @@ void Stitch::Stitch_all()
 	}
 
     cout << "Lamel: output width: " << output_width << " " << "output Height: " << output_height << endl;
-	int number_of_big_tile_c = output_width / big_tile_size + 1;
+
+    int number_of_big_tile_c = output_width / big_tile_size + 1;
 	int number_of_big_tile_r = output_height / big_tile_size + 1;
 
 	vector<vector<vector<int>>> tile_config_array(number_of_big_tile_r,vector<vector<int>>(number_of_big_tile_c, vector<int>(6,INVALID_VALUE)));
@@ -776,19 +773,20 @@ void Stitch::Stitch_all()
 						if (!nogui)
 						{
 							imshow("big tile", current_tile);
+							imwrite(to_string(col_bias + xx) + "_" +to_string(row_bias + yy) +".jpeg", current_tile);
 						    waitKey(100);
 					    }
 					    // Z = zz | Y = row_bias + yy | X = col_bias + xx
 						vector<uchar> encoded_image;
 						imencode(".jpeg", current_tile, encoded_image);
-					    ImageFile image_file(&encoded_image[0],encoded_image.size());
-						full_lamel_images.push_back(FullLamelImage(&image_file, col_bias + xx, row_bias + yy,zz));
-					}
+					    ImageFile image_file(encoded_image,encoded_image.size());
+						full_lamel_images.push_back(FullLamelImage(image_file, col_bias + xx, row_bias + yy,zz));
+                    }
 				}
 			}
 		}
 	}
-	cout << "END! ;)" << endl;
+	cout << "SUCCESSFULLY ENDED! ;)" << endl;
 }
 
 void Stitch::blend(Mat& crop_stitch_image_mask, Mat& stitched_image, Mat& image, Rect image_rect) {
@@ -797,7 +795,7 @@ void Stitch::blend(Mat& crop_stitch_image_mask, Mat& stitched_image, Mat& image,
 	int dilate_kernel_size_2 = 61;
 	double resize_ratio = 0.01;
 	if (show_log)
-        cout << "Start Blending ..." << endl;
+		cout << "Start Blending ..." << endl;
 	Mat dialation_kernel = getStructuringElement(MORPH_RECT, Size(dilate_kernel_size, dilate_kernel_size));
 	Mat dialation_kernel_2 = getStructuringElement(MORPH_RECT, Size(dilate_kernel_size_2, dilate_kernel_size_2));
 
@@ -836,12 +834,16 @@ void Stitch::blend(Mat& crop_stitch_image_mask, Mat& stitched_image, Mat& image,
 
 	dist--;
 	for (int d = 2; d <= dist; d++)
+	{
 		for (int r = 0; r < resized_mask_intersection.rows; r++)
+		{
 			for (int c = 0; c < resized_mask_intersection.cols; c++)
 			{
 				if (resized_mask_intersection.at<float>(r, c) == d)
 					resized_mask_intersection.at<float>(r, c) = (float)(dist - d + 1) / dist;
 			}
+        }
+    }
 
 	Mat mask_intersection_new;
 	resize(resized_mask_intersection, mask_intersection_new, Size(image_rect.width, image_rect.height));
@@ -882,8 +884,10 @@ void Stitch::blend(Mat& crop_stitch_image_mask, Mat& stitched_image, Mat& image,
 	split(image_float, image_layers);
 
 	for (int ii = 0; ii<3; ii++)
+	{
 		cur_stitch_crop_layers[ii] = cur_stitch_crop_layers[ii].mul(complement_weight) +
 		image_layers[ii].mul(mask_intersection_new);
+	}
 	merge(cur_stitch_crop_layers, 3, cur_stitch_crop_float);
 	cur_stitch_crop_float.convertTo(cur_stitch_crop_float, CV_8UC3);
 	cur_stitch_crop_float.copyTo(cur_stitch_crop);
@@ -946,7 +950,7 @@ Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_
             if (load_from_disk)
 	    		cur_image = imread(data_dir + pref + to_string(rr) + "_" + to_string(cc) + "." + image_ext, CV_LOAD_IMAGE_UNCHANGED);
 			else
-    		    cur_image = imdecode(Mat(1, lamel_images->rows[rr].columns[cc].length, CV_8UC1, lamel_images->rows[rr].columns[cc].data), CV_LOAD_IMAGE_UNCHANGED);
+    		    cur_image = imdecode(Mat(1, lamel_images->rows[rr].columns[cc].length_, CV_8UC1, &lamel_images->rows[rr].columns[cc].data_[0]), CV_LOAD_IMAGE_UNCHANGED);
 
 		    cvtColor(cur_image, cur_image, COLOR_BGR2RGB);
 
@@ -982,6 +986,7 @@ extern "C" __declspec(dllexport) FullLamelImages __cdecl stitch_all(LamelImages*
     ///Set Stitcher Config Arrays
     Stitch stitcher(lamel_images->row_count,lamel_images->rows->column_count);
 	memcpy(&stitcher.most_informative_column[0], best_col,sizeof(int)*stitcher.row_count);
+
     for (int i = 0; i < stitcher.row_count; i++)
     {
 		for (int j = 0; j < stitcher.column_count; j++)
@@ -998,9 +1003,7 @@ extern "C" __declspec(dllexport) FullLamelImages __cdecl stitch_all(LamelImages*
     /// Making Tilesets
 	stitcher.Stitch_all();
 
-	FullLamelImages full_lamel_images;
-	full_lamel_images.full_lamel_image = &stitcher.full_lamel_images[0];
-	full_lamel_images.length = stitcher.full_lamel_images.size();
-	cout << full_lamel_images.length << endl;
-	return full_lamel_images;
+	FullLamelImages full_lamel_images(stitcher.full_lamel_images);
+	
+    return full_lamel_images;
 }

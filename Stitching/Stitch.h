@@ -12,20 +12,25 @@ const std::string CONFIG_FILE_PATH = "StitchConfig.json";
 
 #define INVALID_VALUE -50000.0
 
+///If the Struct seems Strange it is because of Common Language Infrastructure (CLI) addressing for DLL
+/// for C++ use only you won't need these.
+
 struct ImageFile
 {
 public:
-	uchar* data;
-	int length;
+	uchar* data_;
+	int length_;
     ImageFile()
     {
-		length = 0;
-		data = nullptr;
+		length_ = 0;
+		data_ = nullptr;
     }
-	ImageFile(uchar* data_, int length_)
+	ImageFile(const std::vector<uchar>& data, int length)
 	{
-		length = length_;
-		data = data_;
+		data_ = new uchar[length];
+		std::copy(data.begin(), data.end(), data_);
+		length_ = length;
+		
 	}
 };
 
@@ -60,23 +65,36 @@ public:
 struct FullLamelImage
 {
 public:
-	struct ImageFile* image_file;
-	int x,y,z;
+	struct ImageFile image_file_;
+	int x_,y_,z_;
 
-    FullLamelImage(ImageFile* image_file_,int x_, int y_, int z_)
+    FullLamelImage()
     {
-		image_file = image_file_;
-		x = x_;
-		y = y_;
-		z = z_;
+		x_ = 0;
+		y_ = 0;
+		z_ = 0;
+    }
+
+    FullLamelImage(ImageFile image_file,int x, int y, int z)
+    {
+		image_file_ = image_file;
+		x_ = x;
+		y_ = y;
+		z_ = z;
     }
 };
 
 struct FullLamelImages
 {
 public :
-	FullLamelImage * full_lamel_image;
-	int length;
+	FullLamelImage* full_lamel_image_;
+	int length_;
+    FullLamelImages(std::vector<FullLamelImage> full_lamel_images)
+    {
+		full_lamel_image_ = new FullLamelImage[full_lamel_images.size()];
+		std::copy(full_lamel_images.begin(), full_lamel_images.end(), full_lamel_image_);
+        length_ = full_lamel_images.size();
+    }
 };
 
 struct FullLamelLevels
@@ -138,15 +156,12 @@ public:
 	ImageFile* row_images;
 	LamelImages* lamel_images;
 	best_column best_column_row;
-	int zoom_levels;
 	std::vector<std::vector<shift>> stitch_shifts_lr;
-	bool load_from_disk = false;
+	
 
     private:
 	std::vector<shift> stitch_shifts_row;
 	std::vector<shift> stitch_shifts_ud;
-	//std::vector<double> stitch_shifts_ud_row;
-	//std::vector<double> stitch_shifts_ud_col;
 	std::vector<best_column>best_column_for_ud;
 	std::vector<std::vector<int>> start_tile_r;
 	std::vector<std::vector<int>> start_tile_c;
@@ -166,7 +181,7 @@ public:
 	cv::Mat stitch_and_blend(int start_row, int end_row, int start_col, int end_col, int big_tile_size, int left_margin, int top_margin);
 
 	blank_property is_image_blank(const cv::Mat& image, int threshold);
-	
+
 	int vertical_deviation = 2;
 	int number_of_threads = 4;
 	int sample_width = 2448;
@@ -177,10 +192,13 @@ public:
     std::string data_dir = "E:\\lamel_stitching\\whole_lamel_data_5\\";
 	std::string image_ext = "jpeg";
 	std::string pref = "img_";
+    
 	bool nogui = true;
-	bool load_shift_arrays = false;
-	bool store_locally = false;
+	bool load_shift_arrays = true;
+	bool store_locally = true;
 	bool show_log = false;
+	bool load_from_disk = true;
+	int zoom_levels = 6;
 
 	// Stitching Parameters
 	int split_ratio_lr = 6;

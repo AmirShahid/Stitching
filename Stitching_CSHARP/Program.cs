@@ -61,8 +61,8 @@ namespace CsharpTest
     }
     struct FullLamelImage
     {
-        public IntPtr image_file;
-        int x, y, z;
+        public ImageFile image_file;
+        public int x, y, z;
     };
 
 
@@ -75,7 +75,7 @@ namespace CsharpTest
         public static extern FullLamelImages stitch_all(LamelImages images, int[] best_column, ShiftArray shift_r, ShiftArray shift_c);
         static void Main(string[] args)
         {
-            int column_count = 20;
+            int column_count = 10;
             int row_count = 20;
             int[] best_column_for_ud = new int[row_count];
             double[][] shifts_r = new double[row_count][];
@@ -85,7 +85,6 @@ namespace CsharpTest
             ShiftArrayRow[] shiftCArrayRows = new ShiftArrayRow[row_count];
             for (int i = 0; i < row_count; i++)
             {
-
                 byte[][] FilesArray = new byte[column_count][];
                 for (int j = 0; j < column_count; j++)
                 {
@@ -125,11 +124,7 @@ namespace CsharpTest
                     columns = handle.AddrOfPinnedObject(),
                     column_count = shifts_c[i].Length
                 };
-                //for (int j = 0; j < Handles.Length; j++)
-                //{
-                //    Handles[j].Free();
-                //}
-                //rowHandler.Free();
+
             }
             Console.WriteLine("Stitch arrays calculated, starting whole lamel Stitch...");
             GCHandle LamelHandler = GCHandle.Alloc(imageRows, GCHandleType.Pinned);
@@ -154,6 +149,27 @@ namespace CsharpTest
                 "Now Calculating whole lamel output ...");
             Console.ReadKey();
             var fullLamelImages = stitch_all(lamelImages, best_column_for_ud, shift_r, shift_c);
+            //FullLamelImage CurrentImage = Marshal.PtrToStructure<FullLamelImage>(ImagePointer);
+            var Ptr = fullLamelImages.full_lamel_image;
+
+            string OutputPath = Environment.CurrentDirectory + "\\output";
+            System.IO.Directory.CreateDirectory(OutputPath);
+
+            for (int i = 0; i < fullLamelImages.Length; i++)
+            {
+                var CurrentImage = Marshal.PtrToStructure<FullLamelImage>(Ptr);
+                byte[] FileArray = new byte[CurrentImage.image_file.Length];
+                Marshal.Copy(CurrentImage.image_file.ByteArray, FileArray, 0, CurrentImage.image_file.Length);
+                var Size = Marshal.SizeOf(CurrentImage);
+
+                Ptr = new IntPtr(Ptr.ToInt64() + Size);
+                string FilePath = OutputPath+$"\\{CurrentImage.z}\\{CurrentImage.x}";
+                System.IO.Directory.CreateDirectory(FilePath);
+
+                System.IO.File.WriteAllBytes($"{FilePath}\\{CurrentImage.y}.jpg", FileArray);
+
+            }
+            var FullLamelImage = Marshal.PtrToStructure<FullLamelImage>(fullLamelImages.full_lamel_image);    
         }
     }
 }
