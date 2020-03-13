@@ -4,7 +4,7 @@ Multi-threaded C++ implementation for Image Stitching.
 
 ## Introduction
 
-In the Automated Medical Image Scanning, we have a significant issue with the moving camera position on the slide, thus the captured images is so likely to have overlapping fields with horizental and vertical adjacent images. We have developed a program in C++(due to its speed) which exports a DLL to be used in any project(example for C# is under Stitching_CSHARP) to concat images regarding to the Matching Common Templates among adjacent images.
+In the Automated Medical Image Scanning, we have a significant issue with the moving camera position on the slide, thus the captured images is so likely to have overlapping fields with horizental and vertical adjacent images. We have developed a program in C++(due to its performance) which exports a DLL to be used in any project(an example for C# is under Stitching_CSHARP) to concat images regarding to the Matching Common Templates among adjacent overlapping images.
 
 #### *Overlapping image samples before stitching*:
 
@@ -22,8 +22,16 @@ In the Automated Medical Image Scanning, we have a significant issue with the mo
 
 2. Set Stitching/StitchConfig.json parameters as you want it can run on RAM to be faster. if you set load_from_disk you should address your data as said in the Data section.
 
+3. Build the C++ Project to export a DLL including its dependencies like jpeg62.dll,opencv_imgproc343.dll, ...
 
-3. The output are the small non-overlapping images which can be concated to make a full lamel image like below
+_(You can use it without exporting DLL in C++ projects like in Stitching/Main.cpp)_
+
+4. Put DLL files beside your project and whenever camera iterate a row in lamel call _get_lr_shifts_ then save the output shifts
+
+5. Finally when the whole lamel has been scanned call _Stitch_all_ to get an array including the whole lamel image in diffrent zoom levels.
+
+### Output Structure 
+The output are the small non-overlapping tiles with diffrent details like google map tilesets and can be read through [leaflet](https://rstudio.github.io/leaflet/). the tiles in a specific zoom level can be concated to make a full lamel image. you can see a 40x40 output for 7 zoom leves [here](https://drive.google.com/open?id=10pyts1j4yTH7hfwQ6NXlntlE_68Vex9-), this is a example for the top zoom level:
 
 <img  src="https://github.com/AmirShahid/Stitching/blob/master/images/stitch_output.jpg" width="776" height="770"/>
 
@@ -33,6 +41,7 @@ for more guidance you can see program.cs under Stitching_CSHARP.
 
 * [OpenCV](https://github.com/opencv/opencv) 3.4.3
 * [Xtensor](https://github.com/xtensor-stack/xtensor) 0.20.5
+* [Leaflet](https://rstudio.github.io/leaflet/) (Optional for visualization)
 
 ## Data 
 
