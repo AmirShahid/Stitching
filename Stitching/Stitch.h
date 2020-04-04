@@ -5,6 +5,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <nlohmann/json.hpp>
 
+
 using json = nlohmann::json;
 namespace pt = boost::property_tree;
 
@@ -13,6 +14,7 @@ const std::string CONFIG_FILE_PATH = "StitchConfig.json";
 #define INVALID_VALUE -50000.0
 
 ///If the Struct seems Strange it is because of Common Language Infrastructure (CLI) addressing for DLL
+
 /// for C++ use only you won't need these.
 
 struct ImageFile
@@ -178,8 +180,8 @@ public:
 	void stitch_single_thread_lr(int start_row, int end_row, int start_col, int end_col);
 	void stitch_single_thread_ud(int start_row, int end_row);
 	void blend(cv::Mat& crop_stitch_image_mask, cv::Mat& stitched_image, cv::Mat& image, cv::Rect image_rect);
-	cv::Mat stitch_and_blend(int start_row, int end_row, int start_col, int end_col, int big_tile_size, int left_margin, int top_margin);
-
+	cv::Mat stitch_and_blend(int start_row, int end_row, int start_col, int end_col, int big_tile_size, int left_margin, int top_margin, const cv::Mat& illumination_pattern);
+	cv::Mat get_illumination_pattern();
 	blank_property is_image_blank(const cv::Mat& image, int threshold);
 
 	int vertical_deviation = 2;
@@ -199,6 +201,7 @@ public:
 	bool show_log = false;
 	bool load_from_disk = true;
 	int zoom_levels = 6;
+	bool illumination_pattern_from_hard = false;
 
 	// Stitching Parameters
 	int split_ratio_lr = 6;

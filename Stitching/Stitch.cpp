@@ -65,6 +65,7 @@ Stitch::Stitch(int row_count, int column_count):
 	load_shift_arrays = config.get<bool>("load_shift_arrays");
 	store_locally = config.get<bool>("store_locally");
 	show_log = config.get<bool>("show_log");
+	illumination_pattern_from_hard = config.get<bool>("illumination_pattern_from_hard");
     instance_count++;
 }
 
@@ -718,6 +719,7 @@ void Stitch::Stitch_all()
 		}
 	}
 	// Generating tileset
+	Mat illumination_pattern = get_illumination_pattern();
 	Mat current_big_tile;
 	int is_empty_zone;
 	for (int idx_r = 0; idx_r < number_of_big_tile_r; idx_r++)
@@ -740,7 +742,7 @@ void Stitch::Stitch_all()
 					tile_config_array[idx_r][idx_c][START_COL],
 					tile_config_array[idx_r][idx_c][END_COL],
 					big_tile_size, tile_config_array[idx_r][idx_c][LEFT_MARGIN],
-					tile_config_array[idx_r][idx_c][TOP_MARGIN]);
+					tile_config_array[idx_r][idx_c][TOP_MARGIN], illumination_pattern);
 			}
 			else
 			{
@@ -895,7 +897,7 @@ void Stitch::blend(Mat& crop_stitch_image_mask, Mat& stitched_image, Mat& image,
 }
 
 
-Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_col, int big_tile_size, int left_margin, int top_margin)
+Mat Stitch::stitch_and_blend(int start_row,int end_row,int start_col,int end_col,int big_tile_size,int left_margin,int top_margin,const Mat& illumination_pattern)
 {
 	cout << start_row << " " << start_col << endl;
 	int min_r = start_tile_r[start_row][start_col], max_r = 0, min_c = start_tile_c[start_row][start_col], max_c = 0;
@@ -947,14 +949,24 @@ Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_
 			cur_row = start_tile_r[rr][cc] - min_r;
 			cur_col = start_tile_c[rr][cc] - min_c;
 
-            if (load_from_disk)
-	    		cur_image = imread(data_dir + pref + to_string(rr) + "_" + to_string(cc) + "." + image_ext, CV_LOAD_IMAGE_UNCHANGED);
+			if (load_from_disk)
+				cur_image = imread(data_dir + pref + to_string(rr) + "_" + to_string(cc) + "." + image_ext, CV_LOAD_IMAGE_UNCHANGED);
 			else
-    		    cur_image = imdecode(Mat(1, lamel_images->rows[rr].columns[cc].length_, CV_8UC1, &lamel_images->rows[rr].columns[cc].data_[0]), CV_LOAD_IMAGE_UNCHANGED);
+				cur_image = imdecode(Mat(1, lamel_images->rows[rr].columns[cc].length_, CV_8UC1, &lamel_images->rows[rr].columns[cc].data_[0]), CV_LOAD_IMAGE_UNCHANGED);
+			cvtColor(cur_image, cur_image, COLOR_BGR2RGB);
 
-		    cvtColor(cur_image, cur_image, COLOR_BGR2RGB);
+			// Brightness Correction
+			if (illumination_pattern.rows > 0)
+			{
+				Mat tiled_illu_pattern, float_image;
+				Mat t[] = { illumination_pattern, illumination_pattern, illumination_pattern };
+				merge(t, 3, tiled_illu_pattern);
+				cur_image.convertTo(float_image, CV_32FC3);
+				float_image = float_image.mul(1.0 / tiled_illu_pattern);
+				float_image.convertTo(cur_image, CV_8UC3);
+			}
 
-		    // Blending
+			// Blending
 			cur_crop = stitched_image.colRange(cur_col, cur_col + sample_width).rowRange(cur_row, cur_row + sample_height);
 			inRange(cur_crop, Scalar(1, 1, 1), Scalar(255, 255, 255), stitched_image_mask);
 			Rect cur_image_rect(cur_col, cur_row, sample_width, sample_height);
@@ -965,7 +977,87 @@ Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_
 	return stitched_image.colRange(left_margin, left_margin + big_tile_size)
 		.rowRange(top_margin, top_margin + big_tile_size);
 }
+cv::Mat Stitch::get_illumination_pattern() {
+	if (!illumination_pattern_from_hard)
+	{
+		int number_of_samples = 10, axis_0_valid_samples = 0, axis_1_valid_samples = 0;
+		int contour_area_threshold = 2000;
+		int random_index, sample_rr, sample_cc;
+		vector<vector<Point> > contours;
+		vector<Vec4i> hierarchy;
+		Mat cur_image, image_gray, edge, foreground, image_hls, hls_component[3], image_light_mask;
+		Mat axis_0_stat = Mat::zeros(1, sample_width, CV_32FC1);
+		Mat axis_1_stat = Mat::zeros(sample_height, 1, CV_32FC1);
 
+		for (int f = 0; f<number_of_samples; f++)
+		{
+			cout << f << endl;
+			Mat foreground_reduce_0 = Mat::zeros(1, sample_width, CV_32SC1);
+			Mat foreground_reduce_1 = Mat::zeros(sample_height, 1, CV_32SC1);
+			Mat cur_axis_0_stat = Mat::zeros(1, sample_width, CV_32SC1);
+			Mat cur_axis_1_stat = Mat::zeros(sample_height, 1, CV_32SC1);
+			random_index = rand() % (row_count * column_count);
+			sample_rr = random_index / row_count;
+			sample_cc = random_index % column_count;
+			if (load_from_disk)
+				cur_image = imread(data_dir + pref + to_string(sample_rr) + "_" + to_string(sample_cc) + "." + image_ext, CV_LOAD_IMAGE_UNCHANGED);
+			else
+				cur_image = imdecode(Mat(1, lamel_images->rows[sample_rr].columns[sample_cc].length_, CV_8UC1, &lamel_images->rows[sample_rr].columns[sample_cc].data_[0]), CV_LOAD_IMAGE_UNCHANGED);
+
+			cvtColor(cur_image, cur_image, COLOR_BGR2RGB);
+			medianBlur(cur_image, cur_image, 13);
+			GaussianBlur(cur_image, cur_image, Size(5, 5), 21);
+			cvtColor(cur_image, image_gray, COLOR_RGB2GRAY);
+			Canny(image_gray, edge, 2, 7);
+			dilate(edge, edge, getStructuringElement(MORPH_RECT, Size(15, 15)));
+			findContours(edge, contours, hierarchy, CV_RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0));
+			foreground = Mat::zeros(image_gray.rows, image_gray.cols, CV_8UC1);
+			for (int i = 0; i< contours.size(); i++)
+			{
+				if (contourArea(contours[i]) > contour_area_threshold)
+					drawContours(foreground, contours, i, 255, -1, LINE_8, hierarchy);
+			}
+			foreground = 255 - foreground;
+			cvtColor(cur_image, image_hls, COLOR_RGB2HLS);
+			split(image_hls, hls_component);
+			bitwise_and(foreground, hls_component[1], image_light_mask);
+
+			reduce(image_light_mask, cur_axis_0_stat, 0, CV_REDUCE_SUM, CV_32SC1);
+			reduce(image_light_mask, cur_axis_1_stat, 1, CV_REDUCE_SUM, CV_32SC1);
+			reduce(foreground, foreground_reduce_0, 0, CV_REDUCE_MAX, CV_8UC1);
+			reduce(foreground, foreground_reduce_1, 1, CV_REDUCE_MAX, CV_8UC1);
+
+			if (countNonZero(foreground_reduce_0) < sample_width)
+				continue;
+			cur_axis_0_stat.convertTo(cur_axis_0_stat, CV_32FC1);
+			for (int i = 0; i<sample_width; i++)
+				axis_0_stat.at<float>(0, i) += cur_axis_0_stat.at<float>(0, i) / countNonZero(foreground.col(i));
+			axis_0_valid_samples++;
+
+			if (countNonZero(foreground_reduce_1) < sample_height)
+				continue;
+			cur_axis_1_stat.convertTo(cur_axis_1_stat, CV_32FC1);
+			for (int i = 0; i<sample_height; i++)
+				axis_1_stat.at<float>(i, 0) += cur_axis_1_stat.at<float>(i, 0) / countNonZero(foreground.row(i));
+			axis_1_valid_samples++;
+		}
+
+		axis_1_stat = axis_1_stat / (float)axis_1_valid_samples;
+		axis_0_stat = axis_0_stat / (float)axis_0_valid_samples;
+
+		double maxVal;
+		minMaxLoc(axis_1_stat, NULL, &maxVal, NULL, NULL, Mat());
+		axis_1_stat = axis_1_stat / maxVal;
+		minMaxLoc(axis_0_stat, NULL, &maxVal, NULL, NULL, Mat());
+		axis_0_stat = axis_0_stat / maxVal;
+
+		Mat illumination_pattern = axis_1_stat * axis_0_stat;
+		return illumination_pattern;
+	}
+	else
+        ///TODO: Should read from a file
+		return cv::Mat();
+}
 
 
 extern "C" __declspec(dllexport) int __cdecl get_lr_shifts(ImageRow* row_images, double* shift_r, double* shift_c)

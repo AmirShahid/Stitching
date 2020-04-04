@@ -2,7 +2,6 @@
 "vertical_deviation": 2,
 "number_of_threads": 4,
 "data_dir": "E:\\lamel_stitching\\whole_lamel_data_5\\",
-"path_delim": "\\",
 "image_extension": "jpeg",
 "pref": "img_",
 "split_ratio_lr": 6,
@@ -26,8 +25,9 @@
 "zoom_levels": 6,
 "tile_size": 256,
 "nogui": true,
-"load_from_disk": true,
-"load_shift_arrays": flase,
-"store_locally": false,
-"show_log": false
+"load_from_disk": false,
+"load_shift_arrays": 0,
+"store_locally": 0,
+"show_log":1,
+"illumination_pattern_from_hard": false
 }

@@ -3,9 +3,10 @@
 #include <opencv2/opencv.hpp>
 using namespace std;
 using namespace cv;
+
 int main()
 {
-    /// This code is just for testing cpp before making dll 
+    /// This code is just for testing cpp before making the dll 
     
 	int row_count = 40;
 	int column_count = 40;

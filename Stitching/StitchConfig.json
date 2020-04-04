@@ -29,5 +29,6 @@
 "load_from_disk": true,
 "load_shift_arrays": true,
 "store_locally": true,
-"show_log": false
+"show_log": false,
+"illumination_pattern_from_hard": false
 }
