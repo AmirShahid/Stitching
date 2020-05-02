@@ -13,6 +13,7 @@ In the Automated Medical Image Scanning, we have a significant issue with the mo
    <img src="https://github.com/AmirShahid/Stitching/blob/master/images/img_7_26.jpeg" width="153" height="128" /><img  src="https://github.com/AmirShahid/Stitching/blob/master/images/img_7_27.jpeg" width="153" height="128" /><img    src="https://github.com/AmirShahid/Stitching/blob/master/images/img_7_28.jpeg" width="153" height="128" /><img    src="https://github.com/AmirShahid/Stitching/blob/master/images/img_7_29.jpeg" width="153" height="128" /><img    src="https://github.com/AmirShahid/Stitching/blob/master/images/img_7_30.jpeg" width="153" height="128" />
    <img src="https://github.com/AmirShahid/Stitching/blob/master/images/img_8_26.jpeg" width="153" height="128" /><img  src="https://github.com/AmirShahid/Stitching/blob/master/images/img_8_27.jpeg" width="153" height="128" /><img    src="https://github.com/AmirShahid/Stitching/blob/master/images/img_8_28.jpeg" width="153" height="128" /><img    src="https://github.com/AmirShahid/Stitching/blob/master/images/img_8_29.jpeg" width="153" height="128" /><img  src="https://github.com/AmirShahid/Stitching/blob/master/images/img_8_30.jpeg" width="153" height="128" />
 </p>
+
 ## Usage
 
 1. Clone to the repository:
