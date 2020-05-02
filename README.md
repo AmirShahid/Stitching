@@ -9,10 +9,10 @@ In the Automated Medical Image Scanning, we have a significant issue with the mo
 #### *Overlapping image samples before stitching*:
 
 *Row 7 : 8 - Columns 26 : 30:*
-
+<p align="center">
    <img src="https://github.com/AmirShahid/Stitching/blob/master/images/img_7_26.jpeg" width="153" height="128" /><img  src="https://github.com/AmirShahid/Stitching/blob/master/images/img_7_27.jpeg" width="153" height="128" /><img    src="https://github.com/AmirShahid/Stitching/blob/master/images/img_7_28.jpeg" width="153" height="128" /><img    src="https://github.com/AmirShahid/Stitching/blob/master/images/img_7_29.jpeg" width="153" height="128" /><img    src="https://github.com/AmirShahid/Stitching/blob/master/images/img_7_30.jpeg" width="153" height="128" />
    <img src="https://github.com/AmirShahid/Stitching/blob/master/images/img_8_26.jpeg" width="153" height="128" /><img  src="https://github.com/AmirShahid/Stitching/blob/master/images/img_8_27.jpeg" width="153" height="128" /><img    src="https://github.com/AmirShahid/Stitching/blob/master/images/img_8_28.jpeg" width="153" height="128" /><img    src="https://github.com/AmirShahid/Stitching/blob/master/images/img_8_29.jpeg" width="153" height="128" /><img  src="https://github.com/AmirShahid/Stitching/blob/master/images/img_8_30.jpeg" width="153" height="128" />
-
+</p>
 ## Usage
 
 1. Clone to the repository:
@@ -32,9 +32,9 @@ _(You can use it without exporting DLL in C++ projects like in Stitching/Main.cp
 
 ### Output Structure 
 The output are the small non-overlapping tiles with diffrent details like google map tilesets and can be read through [leaflet](https://rstudio.github.io/leaflet/). the tiles in a specific zoom level can be concated to make a full lamel image. you can see a 40x40 output for 7 zoom leves [here](https://drive.google.com/open?id=10pyts1j4yTH7hfwQ6NXlntlE_68Vex9-), this is a example for the top zoom level:
-
+<p align="center">
 <img  src="https://github.com/AmirShahid/Stitching/blob/master/images/stitch_output.jpg" width="776" height="770"/>
-
+</p>
 
 for more guidance you can see program.cs under Stitching_CSHARP.
 ## Requirements
