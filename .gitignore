@@ -262,8 +262,6 @@ __pycache__/
 
 #Program Results
 *.zip
-/Stitching/LR_4.json
-/Stitching/LR_3.json
-/Stitching/LR_2.json
-/Stitching/LR_1.json
-/Stitching/LR_0.json
+*.json
+*.jpg
+

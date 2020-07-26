@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <opencv2/core/mat.hpp>
-#include <xtensor/xarray.hpp>
+//#include <xtensor/xarray.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <nlohmann/json.hpp>
 
@@ -12,6 +12,8 @@ namespace pt = boost::property_tree;
 const std::string CONFIG_FILE_PATH = "StitchConfig.json";
 
 #define INVALID_VALUE -50000.0
+#define NO_DETECTION_VALUE -40000.0
+#define BLANK_VALUE -30000.0
 
 ///If the Struct seems Strange it is because of Common Language Infrastructure (CLI) addressing for DLL
 
@@ -106,13 +108,107 @@ public:
 	int zoom_level_count;
 };
 
+struct IntArrCol{
+public:
+	int* elements_;
+	int length_;
+	IntArrCol() {
+		elements_ = nullptr;
+		length_ = 0;
+	}
+	IntArrCol(std::vector<int> elements)
+	{
+		elements_ = new int[elements.size()];
+		std::copy(elements.begin(), elements.end(), elements_);
+		length_ = elements.size();
+
+	}
+};
+
+struct ArrRow {
+public:
+	struct IntArrCol* cols_;
+	int length_;
+	ArrRow() 
+	{
+		cols_ = nullptr;
+		length_ = 0;
+	}
+	ArrRow(std::vector<IntArrCol> cols)
+	{
+		cols_ = new IntArrCol[cols.size()];
+		std::copy(cols.begin(), cols.end(), cols_);
+		length_ = cols.size();
+	}
+};
+
+struct ThreeDArr
+{
+public:
+	struct ArrRow* rows_;
+	int length_;
+    ThreeDArr()
+    {
+		rows_ = nullptr;
+		length_ = 0;
+    }
+	ThreeDArr(std::vector<ArrRow> rows) 
+	{
+		rows_ = new ArrRow[rows.size()];
+		std::copy(rows.begin(), rows.end(), rows_);
+		length_ = rows.size();
+	}
+};
+
+//struct CoordinateResult
+//{
+//public:
+//	struct ThreeDArr tile_config_array_;
+//	struct ArrRow start_r_;
+//	struct ArrRow start_c_;
+//    CoordinateResult(ThreeDArr three_d_arr, std::vector<std::vector<int>> start_r, std::vector<std::vector<int>> start_c)
+//    {
+//		tile_config_array_ = three_d_arr;
+//		std::vector<IntArrCol> arr_cols_r(start_r.size());
+//		std::vector<IntArrCol> arr_cols_c(start_c.size());
+//        for (int i=0; i < start_r.size();i++)
+//        {
+//			IntArrCol elements(start_r[i]);
+//			arr_cols_r.push_back(elements);
+//        }
+//		for (int i = 0; i < start_c.size(); i++)
+//		{
+//			IntArrCol elements(start_c[i]);
+//			arr_cols_c.push_back(elements);
+//		}
+//		ArrRow start_r__ArrRow(arr_cols_r);
+//		ArrRow start_c__ArrRow(arr_cols_r);
+//		start_r_ = start_r__ArrRow;
+//		start_c_ = start_c__ArrRow;
+//    }
+//};
+
+struct CoordinateResult
+{
+public:
+	struct ThreeDArr tile_config_array_;
+	struct ArrRow start_r_;
+	struct ArrRow start_c_;
+    CoordinateResult(ThreeDArr three_d_arr, ArrRow start_r, ArrRow start_c)
+    {
+		tile_config_array_ = three_d_arr;
+		start_r_ = start_r;
+		start_c_ = start_c;
+    }
+};
+
+
 static int instance_count = 0;
 
 class Stitch
 {
 public:
 	Stitch(int row_count = 0, int column_count = 0);
-
     struct best_column
 	{
 		best_column() { column = 0; color_ratio = 0; }
@@ -137,19 +233,18 @@ public:
 	/* @brief Calculate horizontal shifts multi threaded in rows
        @return 2d shifts vector
     */
-    std::vector<std::vector<shift>> calculate_stitch_shifts_lr_in_row();
 
     std::vector<shift>& calculate_stitch_shifts_ud();
 
-    /// Calculate horizontal shifts multi threaded in columns
-    std::vector<std::vector<shift>> calculate_stitch_shifts_lr_in_column();
-
-    /// Calculate horizontal shifts for specific row multi threaded in rows
+    /// Calculates horizontal shifts for specific row multi threaded in rows
     std::vector<shift>& calculate_stitch_shifts_lr(int row_number = 0);
 
-    /// only should be called when horizontal shifts has been calculated
+    /// Only should be called when horizontal shifts has been calculated
     void Stitch_all();
 
+	/// Calculates absoloute coordinates 
+	std::vector<std::vector<std::vector<int>>> get_big_tile_coordinates();
+	void Stitch_big_tile(int row_index, int col_index);
     const int row_count, column_count;
 	std::vector<FullLamelImage> full_lamel_images;
 	std::vector<std::vector<double>> stitch_shifts_lr_row;
@@ -159,16 +254,15 @@ public:
 	LamelImages* lamel_images;
 	best_column best_column_row;
 	std::vector<std::vector<shift>> stitch_shifts_lr;
-	
-
+	std::vector<std::vector<std::vector<int>>> tile_config_array;
+	std::vector<std::vector<int>> start_tile_r;
+	std::vector<std::vector<int>> start_tile_c;
     private:
 	std::vector<shift> stitch_shifts_row;
 	std::vector<shift> stitch_shifts_ud;
 	std::vector<best_column>best_column_for_ud;
-	std::vector<std::vector<int>> start_tile_r;
-	std::vector<std::vector<int>> start_tile_c;
 	std::vector<int> shift_idx;
-
+	enum tile_config { START_ROW, END_ROW, START_COL, END_COL, LEFT_MARGIN, TOP_MARGIN };
     struct blank_property
     {
 		bool is_blank;
@@ -218,7 +312,10 @@ public:
 	double grey_std_thresh_ST = 11;
 	double grey_std_thresh_BC = 5;
 	double area_threshold = 0.0001;
+	int big_tile_size = int(tile_size * pow(2, zoom_levels));
 	pt::ptree config;
 };
 extern "C" __declspec(dllexport) int __cdecl get_lr_shifts(ImageRow* row_images, double* shift_r, double* shift_c);
 extern "C" __declspec(dllexport) FullLamelImages __cdecl stitch_all(LamelImages* lamel_images, int* best_col, ShiftArray* shift_r, ShiftArray* shift_c);
+extern "C" __declspec(dllexport) CoordinateResult __cdecl get_big_tile_coordinates(LamelImages* lamel_images, int* best_col, ShiftArray* shift_r, ShiftArray* shift_c);
+extern "C" __declspec(dllexport) FullLamelImages __cdecl stitch_big_tile(LamelImages* lamel_images, CoordinateResult* tile_config_array, int idx_r, int idx_c);
