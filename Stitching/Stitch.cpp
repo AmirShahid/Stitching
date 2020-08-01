@@ -636,7 +636,7 @@ vector<vector<vector<int>>> Stitch::get_big_tile_coordinates()
 
 				tile_config_array[current_tile_row_index][current_tile_col_index][START_ROW] = rr;
 				tile_config_array[current_tile_row_index][current_tile_col_index][TOP_MARGIN] =
-					start_tile_r[rr][cc] - current_tile_row_index * big_tile_size;
+					current_tile_row_index * big_tile_size - start_tile_r[rr][cc];
 			}
 
 			// Update end row
@@ -666,7 +666,7 @@ vector<vector<vector<int>>> Stitch::get_big_tile_coordinates()
 
 				tile_config_array[current_tile_row_index][current_tile_col_index][START_COL] = cc;
 				tile_config_array[current_tile_row_index][current_tile_col_index][LEFT_MARGIN] =
-					start_tile_c[rr][cc] - current_tile_col_index * big_tile_size;
+					current_tile_col_index * big_tile_size - start_tile_c[rr][cc];
 			}
 
 			// Update end column
@@ -682,7 +682,8 @@ vector<vector<vector<int>>> Stitch::get_big_tile_coordinates()
 
 void Stitch::Stitch_big_tile(int idx_r, int idx_c)
 {
-	Mat illumination_pattern = get_illumination_pattern();
+	//Mat illumination_pattern = get_illumination_pattern();
+	Mat illumination_pattern = Mat();
 	Mat current_big_tile;
 	int is_empty_zone;
 	is_empty_zone = 0;
@@ -738,6 +739,7 @@ void Stitch::Stitch_big_tile(int idx_r, int idx_c)
 				}
 				// Z = zz | Y = row_bias + yy | X = col_bias + xx
 				vector<uchar> encoded_image;
+				cvtColor(current_tile, current_tile, COLOR_BGR2RGB);
 				imencode(".jpeg", current_tile, encoded_image);
 				ImageFile image_file(encoded_image, encoded_image.size());
 				full_lamel_images.push_back(FullLamelImage(image_file, col_bias + xx, row_bias + yy, zz));
@@ -1097,39 +1099,21 @@ Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_
 {
 	cout << start_row << " " << start_col << endl;
 	int min_r = start_tile_r[start_row][start_col], max_r = 0, min_c = start_tile_c[start_row][start_col], max_c = 0;
-    for (int rr = start_row; rr <= end_row; rr++)
+	for (int rr = start_row; rr <= end_row; rr++)
 		for (int cc = start_col; cc <= end_col; cc++)
 		{
 			update_min_and_max(start_tile_r[rr][cc], min_r, max_r);
 			update_min_and_max(start_tile_c[rr][cc], min_c, max_c);
 		}
-
 	// Exception Handling
 	if (start_row < 0 || end_row < start_row || start_col < 0 || end_col < start_col)
 	{
 		cout << "Invalid Input for stitching...";
 		return Mat();
 	}
-
 	// Calculating output width and height
 	max_c += sample_width;
 	max_r += sample_height;
-
-	if (min_c + left_margin + big_tile_size > max_c)
-		max_c = min_c + left_margin + big_tile_size;
-	if (min_r + top_margin + big_tile_size > max_r)
-		max_r = min_r + top_margin + big_tile_size;
-	if (left_margin < 0)
-	{
-		min_c += left_margin;
-		left_margin = 0;
-	}
-	if (top_margin < 0)
-	{
-		min_r += top_margin;
-		top_margin = 0;
-	}
-
 	int output_width = max_c - min_c + 1;
 	int output_height = max_r - min_r + 1;
 	Mat stitched_image = Mat::zeros(Size(output_width, output_height), CV_8UC3);
@@ -1141,10 +1125,9 @@ Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_
 		for (int cc = start_col; cc <= end_col; cc++)
 		{
 			cout << "row: " << rr << " " << "col: " << cc << endl;
-			
+
 			cur_row = start_tile_r[rr][cc] - min_r;
 			cur_col = start_tile_c[rr][cc] - min_c;
-
 			if (load_from_disk)
 				cur_image = imread(data_dir + pref + to_string(rr) + "_" + to_string(cc) + "." + image_ext, IMREAD_UNCHANGED);
 			else
@@ -1160,17 +1143,30 @@ Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_
 				float_image = float_image.mul(1.0 / tiled_illu_pattern);
 				float_image.convertTo(cur_image, CV_8UC3);
 			}
-
 			// Blending
 			cur_crop = stitched_image.colRange(cur_col, cur_col + sample_width).rowRange(cur_row, cur_row + sample_height);
 			inRange(cur_crop, Scalar(1, 1, 1), Scalar(255, 255, 255), stitched_image_mask);
 			Rect cur_image_rect(cur_col, cur_row, sample_width, sample_height);
-		    blend(stitched_image_mask, stitched_image, cur_image, cur_image_rect);
+			blend(stitched_image_mask, stitched_image, cur_image, cur_image_rect);
 		}
 	}
+	Mat bigtile_stitch_image = Mat::zeros(Size(big_tile_size, big_tile_size), CV_8UC3);
+	int first_output_r = top_margin < 0 ? -top_margin : 0;
+	int first_output_c = left_margin < 0 ? -left_margin : 0;
+	int last_output_r = (output_height + first_output_r) > big_tile_size ? big_tile_size : output_height + first_output_r;
+	int last_output_c = (output_width + first_output_c) > big_tile_size ? big_tile_size : output_width + first_output_c;
+	int crop_width = last_output_c - first_output_c;
+	int crop_height = last_output_r - first_output_r;
+	int first_output_r_tile = top_margin < 0 ? 0 : top_margin;
+	int first_output_c_tile = left_margin < 0 ? 0 : left_margin;
 
-	return stitched_image.colRange(left_margin, left_margin + big_tile_size)
-		.rowRange(top_margin, top_margin + big_tile_size);
+	Mat stitch_tile_crop = stitched_image.colRange(first_output_c_tile, first_output_c_tile + crop_width).
+		rowRange(first_output_r_tile, first_output_r_tile + crop_height);
+	stitch_tile_crop.copyTo(bigtile_stitch_image(Rect(first_output_c, first_output_r, last_output_c - first_output_c, last_output_r - first_output_r)));
+	//    imshow("-1", stitched_image);
+	//    imshow("2", bigtile_stitch_image);
+	//    waitKey();
+	return bigtile_stitch_image;
 }
 cv::Mat Stitch::get_illumination_pattern() {
 	if (!illumination_pattern_from_hard)
@@ -1178,7 +1174,7 @@ cv::Mat Stitch::get_illumination_pattern() {
 		int number_of_samples = 10, axis_0_valid_samples = 0, axis_1_valid_samples = 0;
 		int contour_area_threshold = 2000;
 		int random_index, sample_rr, sample_cc;
-		vector<vector<Point> > contours;
+	    vector<vector<Point> > contours;
 		vector<Vec4i> hierarchy;
 		Mat cur_image, image_gray, edge, foreground, image_hls, hls_component[3], image_light_mask;
 		Mat axis_0_stat = Mat::zeros(1, sample_width, CV_32FC1);
@@ -1194,12 +1190,13 @@ cv::Mat Stitch::get_illumination_pattern() {
 			random_index = rand() % (row_count * column_count);
 			sample_rr = random_index / column_count;
 			sample_cc = random_index % column_count;
+			cout << "rr: " << sample_rr << "  cc: " << sample_cc << endl;
 			if (load_from_disk)
 				cur_image = imread(data_dir + pref + to_string(sample_rr) + "_" + to_string(sample_cc) + "." + image_ext, IMREAD_UNCHANGED);
 			else
 				cur_image = imdecode(Mat(1, lamel_images->rows[sample_rr].columns[sample_cc].length_, CV_8UC1, &lamel_images->rows[sample_rr].columns[sample_cc].data_[0]), IMREAD_UNCHANGED);
-
-			cvtColor(cur_image, cur_image, COLOR_BGR2RGB);
+			cout << "after image reading" << endl;
+ 			cvtColor(cur_image, cur_image, COLOR_BGR2RGB);
 			medianBlur(cur_image, cur_image, 13);
 			GaussianBlur(cur_image, cur_image, Size(5, 5), 21);
 			cvtColor(cur_image, image_gray, COLOR_RGB2GRAY);
