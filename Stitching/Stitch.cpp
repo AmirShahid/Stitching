@@ -5,7 +5,7 @@
 #include <conio.h>
 #include <ctime>
 #include <string> 
-#include <cmath> 
+#include <cmath>
 #include <boost/filesystem.hpp>
 #include <cstdio>
 #include <cstdlib>
@@ -1105,15 +1105,18 @@ Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_
 			update_min_and_max(start_tile_r[rr][cc], min_r, max_r);
 			update_min_and_max(start_tile_c[rr][cc], min_c, max_c);
 		}
+
 	// Exception Handling
 	if (start_row < 0 || end_row < start_row || start_col < 0 || end_col < start_col)
 	{
 		cout << "Invalid Input for stitching...";
 		return Mat();
 	}
+
 	// Calculating output width and height
 	max_c += sample_width;
 	max_r += sample_height;
+
 	int output_width = max_c - min_c + 1;
 	int output_height = max_r - min_r + 1;
 	Mat stitched_image = Mat::zeros(Size(output_width, output_height), CV_8UC3);
@@ -1128,6 +1131,7 @@ Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_
 
 			cur_row = start_tile_r[rr][cc] - min_r;
 			cur_col = start_tile_c[rr][cc] - min_c;
+
 			if (load_from_disk)
 				cur_image = imread(data_dir + pref + to_string(rr) + "_" + to_string(cc) + "." + image_ext, IMREAD_UNCHANGED);
 			else
@@ -1143,6 +1147,7 @@ Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_
 				float_image = float_image.mul(1.0 / tiled_illu_pattern);
 				float_image.convertTo(cur_image, CV_8UC3);
 			}
+
 			// Blending
 			cur_crop = stitched_image.colRange(cur_col, cur_col + sample_width).rowRange(cur_row, cur_row + sample_height);
 			inRange(cur_crop, Scalar(1, 1, 1), Scalar(255, 255, 255), stitched_image_mask);
@@ -1151,23 +1156,32 @@ Mat Stitch::stitch_and_blend(int start_row, int end_row, int start_col, int end_
 		}
 	}
 	Mat bigtile_stitch_image = Mat::zeros(Size(big_tile_size, big_tile_size), CV_8UC3);
+
 	int first_output_r = top_margin < 0 ? -top_margin : 0;
 	int first_output_c = left_margin < 0 ? -left_margin : 0;
-	int last_output_r = (output_height + first_output_r) > big_tile_size ? big_tile_size : output_height + first_output_r;
-	int last_output_c = (output_width + first_output_c) > big_tile_size ? big_tile_size : output_width + first_output_c;
-	int crop_width = last_output_c - first_output_c;
-	int crop_height = last_output_r - first_output_r;
+
 	int first_output_r_tile = top_margin < 0 ? 0 : top_margin;
 	int first_output_c_tile = left_margin < 0 ? 0 : left_margin;
 
+	int last_output_r = (output_height - first_output_r_tile + first_output_r) > big_tile_size ? big_tile_size : (output_height - first_output_r_tile + first_output_r);
+	int last_output_c = (output_width - first_output_c_tile + first_output_c) > big_tile_size ? big_tile_size : (output_width - first_output_c_tile + first_output_c);
+
+	int crop_width = last_output_c - first_output_c;
+	int crop_height = last_output_r - first_output_r;
+
+
 	Mat stitch_tile_crop = stitched_image.colRange(first_output_c_tile, first_output_c_tile + crop_width).
 		rowRange(first_output_r_tile, first_output_r_tile + crop_height);
+
 	stitch_tile_crop.copyTo(bigtile_stitch_image(Rect(first_output_c, first_output_r, last_output_c - first_output_c, last_output_r - first_output_r)));
+
 	//    imshow("-1", stitched_image);
 	//    imshow("2", bigtile_stitch_image);
 	//    waitKey();
+
 	return bigtile_stitch_image;
 }
+
 cv::Mat Stitch::get_illumination_pattern() {
 	if (!illumination_pattern_from_hard)
 	{
