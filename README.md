@@ -1,4 +1,4 @@
-# Images Stitching ***A part of our Automated Slide Scanner***
+# Images Stitching <sub>***A part of our Automated Slide Scanner***</sub>
 
 Multi-threaded C++ implementation for Image Stitching. 
 
