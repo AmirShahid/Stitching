@@ -1,6 +1,6 @@
 # Images Stitching
 
-Multi-threaded C++ implementation for Image Stitching. A part of our Automated Slide Scanner
+Multi-threaded C++ implementation for Image Stitching. ***A part of our Automated Slide Scanner***
 
 ## Introduction
 
