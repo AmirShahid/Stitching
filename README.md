@@ -49,4 +49,4 @@ for more guidance you can see program.cs under Stitching_CSHARP.
 We've made our own datasets with our Basler camera. you can add your dataset with setting data_dir parameter in StitchConfig.json and the images names can be like *{pref}\_{row_number}\_{column_number}.{ext}* where pref and ext should set through StitchConfig.
 
 ## Questions
-Please add an issue if you have any questions
+Please add an issue if you have any question
